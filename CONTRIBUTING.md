@@ -1,3 +1,14 @@
+> [!WARNING]
+> If you see this, you are likely on the old `ha_integration` branch. This has now been merged back into `master`. Please ensure you submit PRs against `master`.
+>
+> If your work is based on ha_integration, rebase your branch onto master using the code below before creating a PR. Once rebased, open a PR against master. Thank you!
+>
+    ```bash
+    git fetch upstream master
+    git checkout ha_integration
+    git rebase upstream/master
+    git push -f origin ha_integration
+    ```
 
 # Contributing to Forecats
 
