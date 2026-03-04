@@ -30,6 +30,28 @@ def resize_image(image: Image.Image, final_size: str) -> Image.Image:
     )
     return image
 
+def resize_image_nocrop(image: Image.Image, final_size: str) -> Image.Image:
+    """Resize image to specified width and height with black letterbox
+
+    Returns the original image if final size is not in the correct format.
+
+    Args:
+        image: PIL Image to be resized
+        final_size: String in format "WIDTHxHEIGHT", e.g. "512x512"
+    """
+    if "x" not in final_size:
+        logger.warning(f"Could not parse image size {final_size}, returning original image")
+        return image
+
+    width, height = map(int, final_size.split("x"))
+    image = ImageOps.pad(
+        image,
+        size=(width, height),
+        method=Image.Resampling.LANCZOS,
+        color=(0,0,0),
+        centering=(0.5, 0.5),
+    )
+    return image
 
 def recolor_image(image: Image.Image, profile: str | None) -> Image.Image:
     """Recolor image based on display profile.

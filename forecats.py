@@ -11,10 +11,10 @@ from google.genai import types
 from PIL import Image
 
 try:
-    from .image_processing import recolor_image, resize_image
+    from .image_processing import recolor_image, resize_image, resize_image_nocrop
     from .models import GenerateRequest
 except ImportError:  # For local testing
-    from image_processing import recolor_image, resize_image
+    from image_processing import recolor_image, resize_image, resize_image_nocrop
     from models import GenerateRequest
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,12 +66,15 @@ def generate_cat_pic(data: GenerateRequest, config_dir: str) -> tuple[str, str]:
     # Post-process image
     resized_image = resize_image(image.copy(), data.final_image_size)
     optimized_image = recolor_image(resized_image, data.display_profile)
+    screen_320_image = resize_image_nocrop(optimized_image, "480x320")
 
     # Save images
     original_filepath = static_dir / "forecats_original.png"
     optimized_filepath = static_dir / "forecats_optimized.png"
+    screen_filepath_320 = static_dir / "forecats_320.png"
     image.save(original_filepath)
     optimized_image.save(optimized_filepath)
+    screen_320_image.save(screen_filepath_320)
 
     _LOGGER.info(f"Images saved to {static_dir}")
 
@@ -135,7 +138,8 @@ def generate_activity(
         Heuristics:
         - You can anthropomorphize the cats to do human-like activities, or you can make them do more cat-like activities occasionally.
         - The activity can be either indoors or outdoors
-        - Activities should be 30% set in locations in Toronto, and 20% set in other specific locations with similar weather, and 50% set in generic locations.
+        - Activities should be 30% set in locations in High Wycombe, UK, and 20% set in other specific locations with similar weather, and 50% set in generic locations.
+        - The activities should be seasonally appropriate (leaf fall in autumn, but not other seasons, for example)
         - The mix of indoor/outdoor should be seasonally appropriate. Summer is mostly outdoor, winter is 50/50 indoor/outdoor.
         - It can be a mundane activity (waiting for the bus, commuting, shopping, reading, etc.) or it can be exciting (playing in the snow, sports, going to a festival, playing tag, games, etc.).
 
@@ -145,7 +149,7 @@ def generate_activity(
             - Foreground: A description of what the cats are doing, including any clothing or accessories they are wearing.
             - Background: A description of the background elements (e.g. buildings, landmarks, trees, furniture, etc.)
         - You don't have to describe the weather
-        - Do not describe the appearance of the cats, with the acception of clothing or accessories needed for the activity
+        - Do not describe the appearance of the cats, with the exception of clothing or accessories needed for the activity
         - The activity should involve all {len(data.cat_names)} cats
         - The activity must not be similar to any of the last 20 activities you generated.
         - Respond in a single line, no more than 100 words
@@ -155,7 +159,7 @@ def generate_activity(
     )
 
     activity_response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model="gemini-3.1-flash-lite-preview",
         contents=activity_prompt,
     )
 
@@ -176,7 +180,8 @@ def generate_image(
     """Generate a cartoon image of cats based on the weather forecast and activity using gemini."""
     image_generation_prompt = textwrap.dedent(
         f"""
-        You are an AI artist creating daily weather illustrations featuring cats based on a weather forecast and an activity that will be given to you. Your task is to generate a vibrant and engaging illustration that captures the essence of the weather conditions and the cats' activity in a specific art style.
+        You are an AI artist creating daily weather illustrations featuring cats based on a weather forecast and an activity that will be given to you.
+        Your task is to generate a vibrant and engaging illustration that captures the essence of the weather conditions and the cats' activity in a specific art style.
 
         The weather forecast is for {data.location} on {data.forecast.get("datetime", "")}:
         {data.forecast}
@@ -198,7 +203,8 @@ def generate_image(
 
         ***********************************************
 
-        Create a vibrant and engaging illustration in the recommended style that captures the essence of the weather conditions and the cats' activity. Use colors and elements that reflect the forecasted weather, making the scene lively and appropriate for the time of year.
+        Create a vibrant and engaging illustration in the recommended style that captures the essence of the weather conditions and the cats' activity.
+        Use colors and elements that reflect the forecasted weather, making the scene lively and appropriate for the time of year.
 
         Additionally, create a small box in the bottom left corner, in the style of the image. This box should contain:
         - A < three word description of the weather conditions
@@ -222,7 +228,7 @@ def generate_image(
     )
 
     response = client.models.generate_content(
-        model="gemini-3-pro-image-preview",
+        model="gemini-3.1-pro-image-preview",
         contents=[image_generation_prompt, *input_images.values()],
         config=types.GenerateContentConfig(
             response_modalities=["IMAGE"],
