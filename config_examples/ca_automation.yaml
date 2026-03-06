@@ -87,18 +87,23 @@ actions:
       message: >-
         {%- set forecast = todays_forecast['weather.forecast_home'].forecast[0]
         -%}
+        {%- set temp_unit = state_attr('weather.forecast_home', 'temperature_unit') -%}
 
         <b>{{ now().strftime('%Y-%m-%d') }}</b>
 
-        Forecast: {{ forecast.condition }} 
+        Forecast: {{ forecast.condition }}
 
-        High of {{ forecast.temperature }} {{ temperature_unit }} with a low of
+        High of {{ forecast.temperature }} {{ temp_unit }} with a low of
         {{ forecast.templow }}
 
+        {% if forecast.precipitation_probability is defined -%}
         {{ forecast.precipitation_probability }}% chance of {{
         forecast.precipitation }} inches of precipitation
+        {%- endif %}
 
+        {% if forecast.uv_index is defined -%}
         UV Index of {{ forecast.uv_index }}
+        {%- endif %}
       data:
         images:
           - /config/www/daily_forecats/forecats_original.png
