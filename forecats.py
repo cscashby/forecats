@@ -228,7 +228,7 @@ def generate_image(
     )
 
     response = client.models.generate_content(
-        model="gemini-3.1-pro-image-preview",
+        model="gemini-3-pro-image-preview",
         contents=[image_generation_prompt, *input_images.values()],
         config=types.GenerateContentConfig(
             response_modalities=["IMAGE"],
