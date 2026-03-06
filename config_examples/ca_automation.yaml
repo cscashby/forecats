@@ -1,0 +1,106 @@
+alias: Generate forecats
+description: ""
+triggers:
+  - trigger: time
+    at: "06:00:00"
+conditions: []
+actions:
+  - action: weather.get_forecasts
+    metadata: {}
+    data:
+      type: daily
+    target:
+      entity_id: weather.forecast_home
+    response_variable: todays_forecast
+  - sequence:
+      - variables:
+          all_cats:
+            eddie:
+              name: Eddie
+              desc: >
+                Eddie is a male black domestic shorthair with green eyes, quite
+                tall legs, very shiny black fur, that turns somewhat brown in
+                sunlight and only one or two tiny white hairs. He's of a nervous
+                disposition, but in a safe space he's quite happy with his life.
+              images:
+                - /config/forecats_data/input_images/eddie-1.jpg
+                - /config/forecats_data/input_images/eddie-2.jpg
+            gracie:
+              name: Gracie
+              desc: >
+                Gracie is a female grey british blue cat with yellow eyes, quite
+                short and stubby, but not fat. Completely grey fur with very
+                dense undercoat. She's very friendly and cuddly, but more of an
+                outdoor than indoor cat
+              images:
+                - /config/forecats_data/input_images/gracie-1.jpg
+                - /config/forecats_data/input_images/gracie-2.jpg
+            casper:
+              name: Casper
+              desc: >
+                Casper is a male white domestic shorthair with dark hazel eyes.
+                He is all white with only three black areas; a very small (penny
+                sized) spot on the top of his head, one strip of black along his
+                middle back, and his tail. He's young and vibrant. Quite thin
+                build and log legs, not fat.
+              images:
+                - /config/forecats_data/input_images/casper-1.jpg
+            dexter:
+              name: Dexter
+              desc: >
+                Dexter is a male black domestic shorthair with hazel eyes. He is
+                a very old man of 15 and has quite spiky hair, not smooth and
+                glossy. He's of medium build definitely not fat, but not as long
+                in the legs as Eddie. His age means he cannot run and is
+                unlikely to be moving around very much.
+              images:
+                - /config/forecats_data/input_images/dexter-1.jpg
+          selected_cats: |
+            {% set selection = [all_cats.eddie, all_cats.gracie] %}
+            {# 1 in 5 chance for Casper #} {% if range(1, 6) | random == 1 %}
+              {% set selection = selection + [all_cats.casper] %}
+            {% endif %}
+            {# 1 in 20 chance for Dexter #} {% if range(1, 21) | random == 1 %}
+              {% set selection = selection + [all_cats.dexter] %}
+            {% endif %}
+            {{ selection }}
+      - action: forecats.generate_cat_picture
+        data:
+          gemini_api_key: YOUR_API_KEY_HERE
+          location: High Wycombe, England, UK
+          forecast: "{{ todays_forecast['weather.forecast_home'].forecast[0] }}"
+          cat_names: "{{ selected_cats | map(attribute='name') | list }}"
+          cat_descriptions: "{{ selected_cats | map(attribute='desc') | list }}"
+          input_image_paths: "{{ selected_cats | map(attribute='images') | sum(start=[]) }}"
+          art_styles:
+            - watercolor
+          image_gen_aspect_ratio: "16:9"
+          image_gen_resolution: 1K
+          final_image_size: 800x480
+          display_profile: "null"
+  - action: notify.brevo
+    data:
+      title: Your daily forecats
+      target:
+        - EMAIL_REDACTED
+        - EMAIL_REDACTED
+      message: >-
+        {%- set forecast = todays_forecast['weather.forecast_home'].forecast[0]
+        -%}
+
+        <b>{{ now().strftime('%Y-%m-%d') }}</b>
+
+        Forecast: {{ forecast.condition }} 
+
+        High of {{ forecast.temperature }} {{ temperature_unit }} with a low of
+        {{ forecast.templow }}
+
+        {{ forecast.precipitation_probability }}% chance of {{
+        forecast.precipitation }} inches of precipitation
+
+        UV Index of {{ forecast.uv_index }}
+      data:
+        images:
+          - /config/www/daily_forecats/forecats_original.png
+    enabled: true
+mode: single
