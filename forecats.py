@@ -83,18 +83,18 @@ def generate_cat_pic(data: GenerateRequest, config_dir: str) -> tuple[str, str]:
     screen_320_image = resize_image_nocrop(optimized_image, "480x320")
 
     # Waveshare 800x480 RGB565 version
-    screen_800_image = resize_image_nocrop(image.copy(), "800x480")
-    screen_800_image = quantize_rgb565(screen_800_image)
+    screen_400_image = resize_image_nocrop(image.copy(), "400x240")
+    screen_400_image = quantize_rgb565(screen_400_image)
 
     # Save images
     original_filepath = static_dir / "forecats_original.png"
     optimized_filepath = static_dir / "forecats_optimized.png"
     screen_filepath_320 = static_dir / "forecats_320.png"
-    screen_filepath_800 = static_dir / "forecats_800.png"
+    screen_filepath_400 = static_dir / "forecats_400.png"
     image.save(original_filepath)
     optimized_image.save(optimized_filepath)
     screen_320_image.save(screen_filepath_320)
-    screen_800_image.save(screen_filepath_800)
+    screen_400_image.save(screen_filepath_400)
 
     _LOGGER.info(f"Images saved to {static_dir}")
 
