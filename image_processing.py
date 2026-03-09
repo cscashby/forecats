@@ -92,6 +92,31 @@ def recolor_image(image: Image.Image, profile: str | None) -> Image.Image:
     return image
 
 
+def quantize_rgb565(image: Image.Image) -> Image.Image:
+    """Quantize image colors to the RGB565 color space.
+
+    Snaps each pixel to the nearest RGB565 value (5 bits red, 6 bits green,
+    5 bits blue) to avoid banding artifacts when the display truncates colors.
+
+    Args:
+        image: PIL Image to be quantized.
+
+    """
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
+    import numpy as np
+
+    arr = np.array(image, dtype=np.uint16)
+    # Round to nearest RGB565 value (5 bits R, 6 bits G, 5 bits B)
+    r = np.minimum(((arr[:, :, 0] + 4) >> 3) << 3, 248)
+    g = np.minimum(((arr[:, :, 1] + 2) >> 2) << 2, 252)
+    b = np.minimum(((arr[:, :, 2] + 4) >> 3) << 3, 248)
+
+    result = np.stack([r, g, b], axis=2).astype(np.uint8)
+    return Image.fromarray(result)
+
+
 def _hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip("#")
     lv = len(hex_color)
