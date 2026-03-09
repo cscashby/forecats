@@ -4,6 +4,7 @@ import io
 import logging
 import random
 import textwrap
+from datetime import datetime
 from pathlib import Path
 
 from google import genai
@@ -47,10 +48,23 @@ def generate_cat_pic(data: GenerateRequest, config_dir: str) -> tuple[str, str]:
     art_style = random.choice(data.art_styles)
     _LOGGER.info(f"Selected art style: {art_style}")
 
+    # Determine time of day for scene context
+    current_hour = datetime.now().hour
+    if current_hour < 6:
+        time_of_day = "late night (the early hours before dawn)"
+    elif current_hour < 12:
+        time_of_day = "morning"
+    elif current_hour < 17:
+        time_of_day = "afternoon"
+    elif current_hour < 21:
+        time_of_day = "evening (after sunset, dusk or twilight)"
+    else:
+        time_of_day = "nighttime (dark outside)"
+
     # Generate activity description
     # TODO add an if-else to allow for date/activity overrides on particular days
     client = genai.Client(api_key=data.gemini_api_key)
-    activity = generate_activity(client, data, prompt_history)
+    activity = generate_activity(client, data, prompt_history, time_of_day)
 
     _LOGGER.info(f"Generated activity: {activity}")
 
@@ -61,7 +75,7 @@ def generate_cat_pic(data: GenerateRequest, config_dir: str) -> tuple[str, str]:
 
     # Generate image
     _LOGGER.info(f"Generating image for: {activity}")
-    image = generate_image(client, data, activity, images, art_style)
+    image = generate_image(client, data, activity, images, art_style, time_of_day)
 
     # Post-process image
     resized_image = resize_image(image.copy(), data.final_image_size)
@@ -119,13 +133,15 @@ def generate_activity(
     client: genai.Client,
     data: GenerateRequest,
     prompt_history: list[str],
+    time_of_day: str,
 ) -> str:
     """Describe an activity for the cats based on the weather forecast and date."""
     activity_prompt = textwrap.dedent(
         f"""
-        You are a prompt generator for static AI cartoon art generation model. Your task is to generate an activity for {len(data.cat_names)} cats to do based on the date and weather conditions provided, which will be used to draw a single picture.
+        You are a prompt generator for static AI cartoon art generation model. Your task is to generate an activity for {len(data.cat_names)} cats to do based on the date, time of day, and weather conditions provided, which will be used to draw a single picture.
 
         The date is {data.forecast.get("datetime", "")}.
+        The current time of day is: {time_of_day}.
 
         The weather forecast is for {data.location}.
 
@@ -147,6 +163,7 @@ def generate_activity(
         - Activities should be 30% set in locations in High Wycombe, UK, and 20% set in other specific locations with similar weather, and 50% set in generic locations.
         - The activities should be seasonally appropriate (leaf fall in autumn, but not other seasons, for example)
         - The mix of indoor/outdoor should be seasonally appropriate. Summer is mostly outdoor, winter is 50/50 indoor/outdoor.
+        - The activity MUST match the current time of day. If it is nighttime or late night, the activity should be a nighttime activity (e.g. stargazing, sleeping, prowling, night walks, cozy indoor activities by lamplight). The scene should look dark/nighttime. If it is morning or afternoon, daytime activities are appropriate.
         - It can be a mundane activity (waiting for the bus, commuting, shopping, reading, etc.) or it can be exciting (playing in the snow, sports, going to a festival, playing tag, games, etc.).
 
         Rules:
@@ -182,6 +199,7 @@ def generate_image(
     activity: str,
     input_images: dict[str, Image.Image],
     art_style: str,
+    time_of_day: str,
 ) -> Image.Image:
     """Generate a cartoon image of cats based on the weather forecast and activity using gemini."""
     image_generation_prompt = textwrap.dedent(
@@ -191,6 +209,8 @@ def generate_image(
 
         The weather forecast is for {data.location} on {data.forecast.get("datetime", "")}:
         {data.forecast}
+
+        The current time of day is: {time_of_day}. The lighting and atmosphere of the scene should reflect this — if it is nighttime, the scene should be dark with appropriate lighting (streetlamps, moonlight, indoor lamps, etc.).
 
         You have {len(data.cat_names)} cats to illustrate:
         {", ".join(data.cat_names)}.
