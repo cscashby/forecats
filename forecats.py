@@ -158,12 +158,13 @@ def generate_activity(
         Generate a fun activity for {len(data.cat_names)} cats to do together that fits the weather conditions and time of year.
 
         Heuristics:
-        - You can anthropomorphize the cats to do human-like activities, or you can make them do more cat-like activities occasionally.
+        - You can anthropomorphize the cats to do human-like activities, as well as cat-like activities.
+        - However, don't give them human hands / feet. They can grasp things that cats could conceivably grasp, but shouldn't have five fingers as that just looks creepy!
         - The activity can be either indoors or outdoors
         - Activities should be 30% set in locations in High Wycombe, UK, and 20% set in other specific locations with similar weather, and 50% set in generic locations.
         - The activities should be seasonally appropriate (leaf fall in autumn, but not other seasons, for example)
         - The mix of indoor/outdoor should be seasonally appropriate. Summer is mostly outdoor, winter is 50/50 indoor/outdoor.
-        - The activity MUST match the current time of day. If it is nighttime or late night, the activity should be a nighttime activity (e.g. stargazing, sleeping, prowling, night walks, cozy indoor activities by lamplight). The scene should look dark/nighttime. If it is morning or afternoon, daytime activities are appropriate.
+        - The activity MUST match the current time of day and weather conditions. If it is nighttime or late night, the activity should be a nighttime activity (e.g. stargazing, sleeping, prowling, night walks, cozy indoor activities by lamplight). The scene should look dark/nighttime. If it is morning or afternoon, daytime activities are appropriate.
         - It can be a mundane activity (waiting for the bus, commuting, shopping, reading, etc.) or it can be exciting (playing in the snow, sports, going to a festival, playing tag, games, etc.).
 
         Rules:
