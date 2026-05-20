@@ -160,7 +160,7 @@ def generate_activity(
         Heuristics:
         - You can anthropomorphize the cats to do human-like activities, as well as cat-like activities.
         - However, don't give them human hands / feet. They can grasp things that cats could conceivably grasp, but shouldn't have five fingers as that just looks creepy!
-        - The activity can be either indoors or outdoors
+        - The activity can be either indoors or outdoors - and could be for example going on a journey or watersports for about 15% of the time, but mostly more static activities that are more appropriate (remaingin 85%)
         - Activities should be 30% set in locations in High Wycombe, UK, and 20% set in other specific locations with similar weather, and 50% set in generic locations.
         - The activities should be seasonally appropriate (leaf fall in autumn, but not other seasons, for example)
         - The mix of indoor/outdoor should be seasonally appropriate. Summer is mostly outdoor, winter is 50/50 indoor/outdoor.
